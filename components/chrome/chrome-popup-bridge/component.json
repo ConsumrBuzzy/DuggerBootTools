@@ -1,0 +1,13 @@
+{
+  "name": "chrome-popup-bridge",
+  "source_path": "c:\\Github\\ConvosoInsightLens\\convoso-insight-lens\\popup.js",
+  "harvested_at": "C:\\Github\\DuggerBootTools",
+  "description": "Chrome popup-to-content script communication bridge",
+  "files": [
+    "popup.js"
+  ],
+  "dependencies": [],
+  "tags": [],
+  "quality_score": 0.0,
+  "lines_of_code": 88
+}

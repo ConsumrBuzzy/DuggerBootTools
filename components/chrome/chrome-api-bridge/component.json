@@ -1,0 +1,13 @@
+{
+  "name": "chrome-api-bridge",
+  "source_path": "c:\\Github\\ConvosoInsightLens\\convoso-insight-lens\\content.js",
+  "harvested_at": "C:\\Github\\DuggerBootTools",
+  "description": "Chrome-to-API messaging bridge with popup communication and data extraction",
+  "files": [
+    "content.js"
+  ],
+  "dependencies": [],
+  "tags": [],
+  "quality_score": 0.0,
+  "lines_of_code": 1491
+}
