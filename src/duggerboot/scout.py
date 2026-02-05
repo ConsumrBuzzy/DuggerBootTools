@@ -785,7 +785,7 @@ class ProjectScout:
         self.logger.info(f"Ecosystem map generated: {output_path}")
     
     def inject_commit_stubs(self, dry_run: bool = False) -> Dict[str, bool]:
-        """Inject commit.py bridge stubs into all projects.
+        """Inject ADR-003 commit.py bridge stubs into all projects.
         
         Args:
             dry_run: If True, only report what would be done without actually injecting
@@ -793,19 +793,22 @@ class ProjectScout:
         Returns:
             Dictionary mapping project names to injection success status
         """
-        self.logger.info("Starting commit.py bridge injection")
+        self.logger.info("Starting ADR-003 commit.py bridge injection")
         
-        # Discover all project directories
+        # Discover all project directories using high-speed scan
         project_dirs = self._discover_projects()
         injection_results = {}
         
-        # Load the commit.py template
-        template_path = Path(__file__).parent / "templates" / "commit.py.j2"
-        if not template_path.exists():
-            self.logger.error("commit.py.j2 template not found")
-            return injection_results
-        
-        commit_template = template_path.read_text(encoding="utf-8")
+        # ADR-003 Bridge Stub content
+        bridge_stub = '''try:
+    from duggerlink.cli.commit import main
+except ImportError:
+    print("❌ DuggerLinkTools not found. Run: pip install -e C:\\\\Github\\\\DuggerLinkTools")
+    exit(1)
+
+if __name__ == "__main__":
+    main()
+'''
         
         for project_dir in project_dirs:
             commit_file = project_dir / "commit.py"
@@ -818,11 +821,11 @@ class ProjectScout:
                     continue
                 
                 if not dry_run:
-                    # Inject the commit.py bridge
-                    commit_file.write_text(commit_template, encoding="utf-8")
-                    self.logger.info(f"Injected commit.py into {project_dir.name}")
+                    # Inject the ADR-003 commit.py bridge
+                    commit_file.write_text(bridge_stub, encoding="utf-8")
+                    self.logger.info(f"Injected ADR-003 bridge into {project_dir.name}")
                 else:
-                    self.logger.info(f"Would inject commit.py into {project_dir.name} (dry run)")
+                    self.logger.info(f"Would inject ADR-003 bridge into {project_dir.name} (dry run)")
                 
                 injection_results[project_dir.name] = True
                 
@@ -831,7 +834,7 @@ class ProjectScout:
                 injection_results[project_dir.name] = False
         
         successful = sum(1 for success in injection_results.values() if success)
-        self.logger.info(f"Bridge injection complete: {successful}/{len(project_dirs)} projects updated")
+        self.logger.info(f"ADR-003 Bridge injection complete: {successful}/{len(project_dirs)} projects updated")
         
         return injection_results
     
