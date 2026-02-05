@@ -151,7 +151,7 @@ def init(name: str, template: str, stack: Optional[str], path: str, retrofit: bo
 @main.command()
 @click.option(
     "--path",
-    default="C:\\Github",
+    default=lambda: str(Path.home() / "Github"),
     help="Ecosystem root directory to scan",
     show_default=True,
 )

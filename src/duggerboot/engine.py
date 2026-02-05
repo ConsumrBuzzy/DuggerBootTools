@@ -8,11 +8,16 @@ from pathlib import Path
 from typing import List, Dict, Any
 import shutil
 import subprocess
+import tempfile
+import time
+from contextlib import contextmanager
 from jinja2 import Environment, FileSystemLoader, Template
 
 from duggerlink.models.project import DuggerProject as Project
 from duggerlink.retrofit_engine import RetrofitEngine
 from .exceptions import DuggerBootError
+from .dependency_checker import DependencyChecker
+from .logging_config import dugger_logger
 
 
 class BootEngine:
@@ -22,6 +27,35 @@ class BootEngine:
         self.templates_dir = Path(__file__).parent / "templates"
         # GitOperations will be initialized per project
         self.git_manager = None
+        self.dependency_checker = DependencyChecker()
+
+    @contextmanager
+    def _atomic_bootstrap(self, project_path: Path):
+        """Context manager for atomic bootstrap operations with rollback."""
+        original_path = None
+        backup_path = None
+        
+        try:
+            # Check if directory exists and create backup
+            if project_path.exists():
+                backup_path = project_path.parent / f"{project_path.name}.backup.{int(time.time())}"
+                shutil.move(str(project_path), str(backup_path))
+                
+            yield
+            
+        except Exception:
+            # Rollback on failure
+            if project_path.exists():
+                shutil.rmtree(str(project_path))
+            
+            if backup_path and backup_path.exists():
+                shutil.move(str(backup_path), str(project_path))
+                
+            raise
+        finally:
+            # Clean up backup on success
+            if backup_path and backup_path.exists():
+                shutil.rmtree(str(backup_path))
         
     def bootstrap_project(
         self,
@@ -38,31 +72,48 @@ class BootEngine:
         # Create project path
         project_path = parent_path / name
         
-        # Check if directory exists
-        if project_path.exists() and not force:
-            raise DuggerBootError(f"Directory '{project_path}' already exists. Use --force to overwrite.")
+        # Log bootstrap start
+        dugger_logger.log_bootstrap_start(name, template_type)
         
-        # Load template
-        template_data = self._load_template(template_type)
-        
-        # Create directory structure
-        self._create_directory_structure(project_path, template_data["structure"])
-        
-        # Render and create files
-        template_path = self.templates_dir / template_type
-        context = {
-            "project_name": name,
-            "template_type": template_type,
-        }
-        self._render_files(project_path, template_path, context)
-        
-        # Validate generated dugger.yaml against DLT schema
-        self._validate_dna(project_path / "dugger.yaml")
-        
-        # Initialize Git and make initial commit
-        self._initialize_git(project_path, name)
-        
-        return project_path
+        try:
+            # Use atomic bootstrap with rollback
+            with self._atomic_bootstrap(project_path):
+                # Load template
+                template_data = self._load_template(template_type)
+                
+                # Check dependency compatibility
+                is_compatible, issues = self.dependency_checker.check_template_compatibility(template_data)
+                dugger_logger.log_dependency_check(template_type, is_compatible, issues)
+                
+                if not is_compatible:
+                    error_msg = "Dependency compatibility issues:\n" + "\n".join(f"  - {issue}" for issue in issues)
+                    raise DuggerBootError(error_msg)
+                
+                # Create directory structure
+                self._create_directory_structure(project_path, template_data["structure"])
+                
+                # Render and create files
+                template_path = self.templates_dir / template_type
+                context = {
+                    "project_name": name,
+                    "template_type": template_type,
+                }
+                self._render_files(project_path, template_path, context)
+                
+                # Validate generated dugger.yaml against DLT schema
+                self._validate_dna(project_path / "dugger.yaml")
+                
+                # Initialize Git and make initial commit
+                self._initialize_git(project_path, name)
+            
+            # Log success
+            dugger_logger.log_bootstrap_success(project_path)
+            return project_path
+            
+        except Exception as e:
+            # Log failure
+            dugger_logger.log_bootstrap_failure(name, e)
+            raise
     
     def list_templates(self) -> List[str]:
         """List all available project templates."""

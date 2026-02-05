@@ -1,14 +1,14 @@
-name: "standard"
-version: "1.0.0"
-description: "Standard Python project template with DLT DNA integration"
+name: "{{ template_name }}"
+version: "{{ template_version }}"
+description: "{{ template_description }}"
 author: "PyPro"
 
 # Template metadata
-stack: "python"
-tags: ["python", "standard", "dlt"]
+stack: "{{ stack_type }}"
+tags: [{{ tags }}]
 
 # Template inheritance
-extends: "none"
+extends: "{{ parent_template | default('none') }}"
 
 # Required dependencies
 dependencies:
@@ -54,13 +54,3 @@ hooks:
   post_git_init:
     - "install_dependencies"
     - "run_quality_gates"
-
-# Legacy file mapping (for backward compatibility)
-files:
-  pyproject.toml.j2: "Project configuration with Python 3.11+"
-  dugger.yaml.j2: "DLT project metadata"
-  .gitignore.j2: "Git ignore patterns"
-  README.md.j2: "Project documentation"
-  src/__init__.py.j2: "Package initialization"
-  tests/__init__.py.j2: "Test package initialization"
-  tests/test_main.py.j2: "Basic test structure"
