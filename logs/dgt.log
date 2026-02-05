@@ -1,0 +1,35 @@
+2026-02-05 11:05:56 | INFO     | dgt.core.orchestrator:__init__:43 - Git repository initialized: C:\Github\DuggerBootTools\.git
+2026-02-05 11:05:56 | INFO     | dgt.core.orchestrator:__init__:52 - Active provider: python
+2026-02-05 11:06:13 | INFO     | dgt.core.orchestrator:__init__:43 - Git repository initialized: C:\Github\DuggerBootTools\.git
+2026-02-05 11:06:13 | INFO     | dgt.core.orchestrator:__init__:52 - Active provider: python
+2026-02-05 11:06:13 | INFO     | dgt.providers.python:_validate_environment_impl:45 - Python version: Python 3.11.9
+2026-02-05 11:06:13 | INFO     | dgt.core.git_operations:stage_all:43 - All changes staged
+2026-02-05 11:06:14 | INFO     | dgt.core.auto_fixer:run_all_fixes:24 - Running auto-fixes...
+2026-02-05 11:06:14 | INFO     | dgt.core.auto_fixer:_run_universal_fixes:183 -   Running pre-commit hooks...
+2026-02-05 11:06:15 | INFO     | dgt.core.auto_fixer:_run_universal_fixes:186 -     ✅ Pre-commit hooks made additional fixes
+2026-02-05 11:06:15 | INFO     | dgt.core.auto_fixer:run_all_fixes:51 - Fixes applied
+2026-02-05 11:06:15 | INFO     | dgt.core.git_operations:stage_all:43 - All changes staged
+2026-02-05 11:06:21 | ERROR    | dgt.core.orchestrator:run_commit_workflow:291 - Commit workflow failed: Pre-flight checks failed: No virtual environment detected. Please create one with 'python -m venv .venv'; Failed to install dependencies: WARNING: Ignoring invalid distribution ~uggercore-git-tools (C:\Python311\Lib\site-packages)
+ERROR: Could not find a version that satisfies the requirement duggerlink-tools (from duggerboot-tools) (from versions: none)
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: python.exe -m pip install --upgrade pip
+ERROR: No matching distribution found for duggerlink-tools
+
+2026-02-05 11:06:25 | INFO     | dgt.core.orchestrator:__init__:43 - Git repository initialized: C:\Github\DuggerBootTools\.git
+2026-02-05 11:06:25 | INFO     | dgt.core.orchestrator:__init__:52 - Active provider: python
+2026-02-05 11:06:35 | INFO     | dgt.core.orchestrator:__init__:43 - Git repository initialized: C:\Github\DuggerBootTools\.git
+2026-02-05 11:06:35 | INFO     | dgt.core.orchestrator:__init__:52 - Active provider: python
+2026-02-05 11:06:35 | INFO     | dgt.providers.python:_validate_environment_impl:45 - Python version: Python 3.11.9
+2026-02-05 11:06:35 | INFO     | dgt.core.auto_fixer:run_all_fixes:24 - Running auto-fixes...
+2026-02-05 11:06:36 | INFO     | dgt.core.auto_fixer:_run_universal_fixes:183 -   Running pre-commit hooks...
+2026-02-05 11:06:36 | INFO     | dgt.core.auto_fixer:_run_universal_fixes:186 -     ✅ Pre-commit hooks made additional fixes
+2026-02-05 11:06:36 | INFO     | dgt.core.auto_fixer:run_all_fixes:51 - Fixes applied
+2026-02-05 11:06:36 | INFO     | dgt.core.git_operations:stage_all:43 - All changes staged
+2026-02-05 11:06:43 | ERROR    | dgt.core.orchestrator:run_commit_workflow:291 - Commit workflow failed: Pre-flight checks failed: No virtual environment detected. Please create one with 'python -m venv .venv'; Failed to install dependencies: WARNING: Ignoring invalid distribution ~uggercore-git-tools (C:\Python311\Lib\site-packages)
+ERROR: Could not find a version that satisfies the requirement duggerlink-tools (from duggerboot-tools) (from versions: none)
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: python.exe -m pip install --upgrade pip
+ERROR: No matching distribution found for duggerlink-tools
+
