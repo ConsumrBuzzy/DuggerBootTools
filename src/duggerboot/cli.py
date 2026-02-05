@@ -12,6 +12,7 @@ from rich.panel import Panel
 from rich.text import Text
 
 from .engine import BootEngine
+from .scout import ProjectScout
 from .exceptions import DuggerBootError
 
 console = Console()
@@ -132,7 +133,74 @@ def init(name: str, template: str, path: str, force: bool, retrofit: bool) -> No
 
 
 @main.command()
-def list() -> None:
+@click.option(
+    "--path",
+    default="C:\\Github",
+    help="Ecosystem root directory to scan",
+    show_default=True,
+)
+@click.option(
+    "--suggest-recycle",
+    is_flag=True,
+    help="Suggest retrofit commands for old projects",
+)
+@click.option(
+    "--output-map",
+    help="Output path for ECOSYSTEM_MAP.md",
+)
+def scout(path: str, suggest_recycle: bool, output_map: str) -> None:
+    """Scan ecosystem for harvestable components and retrofit candidates."""
+    try:
+        scout = ProjectScout(Path(path))
+        inventory = scout.scan_ecosystem(suggest_recycle=suggest_recycle)
+        
+        # Display summary
+        scout.display_summary(inventory)
+        
+        # Generate ecosystem map
+        if output_map:
+            scout.generate_ecosystem_map(inventory, Path(output_map))
+            console.print(
+                Panel(
+                    Text.from_markup(f"📄 Ecosystem map generated: {output_map}"),
+                    title="Documentation Created",
+                    border_style="green",
+                )
+            )
+        else:
+            # Default to current directory
+            default_path = Path.cwd() / "ECOSYSTEM_MAP.md"
+            scout.generate_ecosystem_map(inventory, default_path)
+            console.print(
+                Panel(
+                    Text.from_markup(f"📄 Ecosystem map generated: {default_path}"),
+                    title="Documentation Created",
+                    border_style="green",
+                )
+            )
+        
+    except DuggerBootError as e:
+        console.print(
+            Panel(
+                Text.from_markup(f"❌ [bold red]{e.message}[/bold red]"),
+                title="Scout Failed",
+                border_style="red",
+            )
+        )
+        raise click.ClickException(str(e))
+    except Exception as e:
+        console.print(
+            Panel(
+                Text.from_markup(f"💥 Unexpected error: {e}"),
+                title="System Error",
+                border_style="red",
+            )
+        )
+        raise click.ClickException(str(e))
+
+
+@main.command()
+def list_templates() -> None:
     """List available project templates."""
     try:
         engine = BootEngine()
