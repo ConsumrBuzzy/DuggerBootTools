@@ -1,0 +1,22 @@
+name: standard
+description: Standard Python project template
+version: 1.0.0
+
+structure:
+  - src
+  - tests
+  - docs
+
+files:
+  pyproject.toml.j2: "Project configuration with Python 3.11+"
+  dugger.yaml.j2: "DLT project metadata"
+  .gitignore.j2: "Git ignore patterns"
+  README.md.j2: "Project documentation"
+  src/__init__.py.j2: "Package initialization"
+  tests/__init__.py.j2: "Test package initialization"
+  tests/test_main.py.j2: "Basic test structure"
+
+dependencies:
+  - duggerlink-tools
+
+python_version: ">=3.11"

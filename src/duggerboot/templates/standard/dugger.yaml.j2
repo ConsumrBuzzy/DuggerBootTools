@@ -1,0 +1,33 @@
+# DuggerLinkTools Project Configuration
+# This file is validated against DLT Pydantic schemas
+
+project:
+  name: "{{ project_name }}"
+  version: "0.1.0"
+  description: "{{ project_name }} - A DuggerLinkTools integrated project"
+  template_type: "{{ template_type }}"
+  created_at: "{{ ansible_date_time.iso8601 if ansible_date_time is defined else 'TBD' }}"
+  
+metadata:
+  author: "PyPro"
+  email: "pypro@dugger.com"
+  license: "MIT"
+  python_version: ">=3.11"
+  
+dependencies:
+  core:
+    - "duggerlink-tools"
+  
+structure:
+  src_dir: "src"
+  tests_dir: "tests"
+  docs_dir: "docs"
+  
+git:
+  auto_init: true
+  initial_commit_message: "chore: initial bootstrap of {{ project_name }}"
+  
+quality:
+  formatter: "black"
+  linter: "ruff"
+  test_runner: "pytest"

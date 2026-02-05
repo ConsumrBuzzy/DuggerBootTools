@@ -1,0 +1,31 @@
+"""
+Basic tests for {{ project_name }}.
+"""
+
+import pytest
+
+
+def test_project_imports() -> None:
+    """Test that the main package can be imported."""
+    try:
+        import {{ project_name }}
+        assert {{ project_name }}.__version__ == "0.1.0"
+    except ImportError as e:
+        pytest.fail(f"Failed to import {{ project_name }}: {e}")
+
+
+def test_project_metadata() -> None:
+    """Test project metadata is correctly set."""
+    import {{ project_name }}
+    
+    assert {{ project_name }}.__author__ == "PyPro"
+    assert {{ project_name }}.__email__ == "pypro@dugger.com"
+
+
+def test_dlt_integration() -> None:
+    """Test DuggerLinkTools integration is available."""
+    try:
+        from duggerlink_tools.models import Project
+        assert Project is not None
+    except ImportError as e:
+        pytest.fail(f"DLT integration failed: {e}")
