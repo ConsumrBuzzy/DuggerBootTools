@@ -1,0 +1,133 @@
+/**
+ * Popup Script for {{ project_name }}
+ * Modern Chrome Extension with DLT DNA validation
+ */
+
+class PopupController {
+  constructor() {
+    this.initialize();
+  }
+
+  initialize() {
+    this.setupEventListeners();
+    this.loadStatus();
+  }
+
+  setupEventListeners() {
+    // Toggle switch
+    const toggle = document.getElementById('toggle');
+    toggle.addEventListener('click', () => this.handleToggle());
+
+    // Action buttons
+    document.getElementById('getPageInfo').addEventListener('click', () => this.getPageInfo());
+    document.getElementById('openOptions').addEventListener('click', () => this.openOptions());
+  }
+
+  async loadStatus() {
+    try {
+      const response = await chrome.runtime.sendMessage({ action: 'getStatus' });
+      this.updateStatus(response);
+    } catch (error) {
+      console.error('Failed to load status:', error);
+      this.showError('Failed to load extension status');
+    }
+  }
+
+  updateStatus(status) {
+    document.getElementById('status').textContent = status.status || 'Unknown';
+    document.getElementById('version').textContent = status.version || '-';
+    
+    // Update toggle state (you'd need to fetch this from storage)
+    this.updateToggleState(true); // Default to enabled
+  }
+
+  updateToggleState(enabled) {
+    const toggle = document.getElementById('toggle');
+    if (enabled) {
+      toggle.classList.add('active');
+    } else {
+      toggle.classList.remove('active');
+    }
+  }
+
+  async handleToggle() {
+    const toggle = document.getElementById('toggle');
+    const isEnabled = toggle.classList.contains('active');
+    
+    try {
+      const response = await chrome.runtime.sendMessage({ action: 'toggleEnabled' });
+      this.updateToggleState(response.enabled);
+      
+      // Show feedback
+      this.showFeedback(`Extension ${response.enabled ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      console.error('Failed to toggle extension:', error);
+      this.showError('Failed to toggle extension');
+    }
+  }
+
+  async getPageInfo() {
+    try {
+      // Get current active tab
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      
+      // Send message to content script
+      const response = await chrome.tabs.sendMessage(tab.id, { action: 'getPageInfo' });
+      
+      if (response.success) {
+        this.showPageInfo(response.data);
+      } else {
+        this.showError('Failed to get page info');
+      }
+    } catch (error) {
+      console.error('Failed to get page info:', error);
+      this.showError('Failed to communicate with content script');
+    }
+  }
+
+  showPageInfo(pageInfo) {
+    const info = `
+      Title: ${pageInfo.title}
+      URL: ${pageInfo.url}
+      Domain: ${pageInfo.domain}
+      Timestamp: ${new Date(pageInfo.timestamp).toLocaleString()}
+    `;
+    
+    alert(info);
+  }
+
+  openOptions() {
+    // Open options page (you'd need to create this)
+    chrome.runtime.openOptionsPage();
+  }
+
+  showFeedback(message) {
+    // Simple feedback - you could make this more sophisticated
+    const status = document.getElementById('status');
+    const originalText = status.textContent;
+    status.textContent = message;
+    status.style.color = '#28a745';
+    
+    setTimeout(() => {
+      status.textContent = originalText;
+      status.style.color = '#495057';
+    }, 2000);
+  }
+
+  showError(message) {
+    const status = document.getElementById('status');
+    const originalText = status.textContent;
+    status.textContent = message;
+    status.style.color = '#dc3545';
+    
+    setTimeout(() => {
+      status.textContent = originalText;
+      status.style.color = '#495057';
+    }, 3000);
+  }
+}
+
+// Initialize popup controller
+document.addEventListener('DOMContentLoaded', () => {
+  new PopupController();
+});
