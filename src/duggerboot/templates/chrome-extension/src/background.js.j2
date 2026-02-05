@@ -1,0 +1,72 @@
+/**
+ * Background Service Worker for {{ project_name }}
+ * Modern Chrome Extension with DLT DNA validation
+ */
+
+class BackgroundService {
+  constructor() {
+    this.initializeListeners();
+  }
+
+  initializeListeners() {
+    // Extension installation
+    chrome.runtime.onInstalled.addListener((details) => {
+      if (details.reason === 'install') {
+        this.handleInstall();
+      } else if (details.reason === 'update') {
+        this.handleUpdate();
+      }
+    });
+
+    // Message handling
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      this.handleMessage(message, sender, sendResponse);
+      return true; // Keep message channel open for async response
+    });
+  }
+
+  handleInstall() {
+    console.log('{{ project_name }} installed');
+    // Initialize default settings
+    chrome.storage.local.set({
+      enabled: true,
+      version: chrome.runtime.getManifest().version
+    });
+  }
+
+  handleUpdate() {
+    console.log('{{ project_name }} updated');
+    // Handle migration if needed
+  }
+
+  async handleMessage(message, sender, sendResponse) {
+    try {
+      switch (message.action) {
+        case 'getStatus':
+          sendResponse({ status: 'active', version: chrome.runtime.getManifest().version });
+          break;
+        
+        case 'toggleEnabled':
+          const result = await this.toggleEnabled();
+          sendResponse(result);
+          break;
+        
+        default:
+          sendResponse({ error: 'Unknown action' });
+      }
+    } catch (error) {
+      console.error('Background message error:', error);
+      sendResponse({ error: error.message });
+    }
+  }
+
+  async toggleEnabled() {
+    const data = await chrome.storage.local.get(['enabled']);
+    const newState = !data.enabled;
+    await chrome.storage.local.set({ enabled: newState });
+    return { enabled: newState };
+  }
+}
+
+// Initialize the background service
+new BackgroundService();
