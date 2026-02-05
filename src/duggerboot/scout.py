@@ -131,35 +131,43 @@ class ProjectScout:
         return inventory
     
     def _discover_projects(self) -> List[Path]:
-        """Discover project directories in ecosystem root using high-speed scan.
+        """Discover project directories using fast os.scandir().
         
         Returns:
             List of project directory paths
         """
         project_dirs = []
         
-        # High-speed scan using os.scandir() - depth limited to 1
         try:
             with os.scandir(self.ecosystem_root) as entries:
                 for entry in entries:
-                    if entry.is_dir() and not entry.name.startswith("."):
-                        dir_path = Path(entry.path)
+                    if not entry.is_dir() or entry.name.startswith('.'):
+                        continue
+                    
+                    project_path = Path(entry.path)
+                    
+                    # Fast detection: if it has .git or signature files, it's a project
+                    if (project_path / '.git').exists():
+                        project_dirs.append(project_path)
+                        continue
+                    
+                    # Check for signature files in root only (shallow detection)
+                    signature_files = [
+                        'manifest.json',
+                        'pyproject.toml',
+                        'requirements.txt',
+                        'package.json',
+                        'dugger.yaml',
+                        'setup.py'
+                    ]
+                    
+                    if any((project_path / sig).exists() for sig in signature_files):
+                        project_dirs.append(project_path)
                         
-                        # Quick project detection: .git directory OR manifest.json
-                        if (dir_path / ".git").exists() or (dir_path / "manifest.json").exists():
-                            project_dirs.append(dir_path)
-                            continue
-                        
-                        # Fallback: check for project indicators (depth=1 only)
-                        if self._has_project_indicators(dir_path):
-                            project_dirs.append(dir_path)
+        except PermissionError:
+            self.logger.warning(f"Permission denied scanning {self.ecosystem_root}")
         except Exception as e:
-            self.logger.error(f"Failed to scan {self.ecosystem_root}: {e}")
-            # Fallback to original method
-            for item in self.ecosystem_root.iterdir():
-                if item.is_dir() and not item.name.startswith("."):
-                    if (item / ".git").exists() or self._has_project_indicators(item):
-                        project_dirs.append(item)
+            self.logger.error(f"Error scanning {self.ecosystem_root}: {e}")
         
         return project_dirs
     
