@@ -10,9 +10,9 @@ import shutil
 import subprocess
 from jinja2 import Environment, FileSystemLoader, Template
 
-from duggerlink_tools.models import Project
-from duggerlink_tools.git import GitManager
-from duggerlink_tools.retrofit_engine import RetrofitEngine
+from duggerlink.models.project import DuggerProject as Project
+from duggerlink.git.operations import GitOperations as GitManager
+from duggerlink.retrofit_engine import RetrofitEngine
 from .exceptions import DuggerBootError
 
 
@@ -21,7 +21,8 @@ class BootEngine:
     
     def __init__(self) -> None:
         self.templates_dir = Path(__file__).parent / "templates"
-        self.git_manager = GitManager()
+        # GitOperations will be initialized per project
+        self.git_manager = None
         
     def bootstrap_project(
         self,
@@ -162,14 +163,29 @@ class BootEngine:
         """Initialize Git repository and make initial commit."""
         try:
             # Initialize git repository
-            self.git_manager.init(project_path)
+            subprocess.run(
+                ["git", "init"],
+                cwd=project_path,
+                check=True,
+                capture_output=True,
+            )
             
             # Add all files
-            self.git_manager.add_all(project_path)
+            subprocess.run(
+                ["git", "add", "."],
+                cwd=project_path,
+                check=True,
+                capture_output=True,
+            )
             
-            # Make initial commit using DLT's commit system
+            # Make initial commit
             commit_message = f"chore: initial bootstrap of {project_name}"
-            self.git_manager.commit(project_path, commit_message)
+            subprocess.run(
+                ["git", "commit", "-m", commit_message],
+                cwd=project_path,
+                check=True,
+                capture_output=True,
+            )
             
         except Exception as e:
             raise DuggerBootError(f"Git initialization failed: {e}") from e
