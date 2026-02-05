@@ -33,8 +33,13 @@ def main() -> None:
 @click.option(
     "--template",
     default="standard",
-    help="Template type to use (default: standard)",
+    help="Project template to use",
     show_default=True,
+)
+@click.option(
+    "--stack",
+    type=click.Choice(["python", "chrome"]),
+    help="Technology stack (auto-detected if not specified)",
 )
 @click.option(
     "--path",
@@ -43,16 +48,16 @@ def main() -> None:
     show_default=True,
 )
 @click.option(
-    "--force",
-    is_flag=True,
-    help="Overwrite existing directory",
-)
-@click.option(
     "--retrofit",
     is_flag=True,
-    help="Retrofit existing directory instead of creating new project",
+    help="Retrofit existing project to DLT standards",
 )
-def init(name: str, template: str, path: str, force: bool, retrofit: bool) -> None:
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Overwrite existing files",
+)
+def init(name: str, template: str, stack: Optional[str], path: str, retrofit: bool, force: bool) -> None:
     """Initialize a new project with DLT DNA validation or retrofit existing project."""
     try:
         engine = BootEngine()
@@ -66,38 +71,46 @@ def init(name: str, template: str, path: str, force: bool, retrofit: bool) -> No
                 overwrite_ide=force,
             )
             
-            performed_count = sum(1 for performed in actions_performed.values() if performed)
-            
             console.print(
                 Panel(
-                    Text.from_markup(
-                        f"🔧 Project '[bold green]{name}[/bold green]' retrofitted!\n\n"
-                        f"📍 Location: {project_path}\n"
-                        f"🧬 DNA: Upgraded to DLT standards\n"
-                        f"🔧 Actions: {performed_count} components injected"
-                    ),
+                    Text.from_markup(f"🔧 Project '{name}' retrofitted!"),
                     title="Project Retrofitted",
                     border_style="green",
                 )
             )
+            console.print(f"📍 Location: {project_path}")
+            console.print("🧬 DNA: Upgraded to DLT standards")
+            console.print(f"🔧 Actions: {len(actions_performed)} components injected")
+            
         else:
-            # Create new project
+            # Create new project with stack-aware template selection
+            if stack is None:
+                # Auto-detect stack from template
+                if template == "chrome-extension":
+                    stack = "chrome"
+                else:
+                    stack = "python"
+            
+            # Validate template compatibility with stack
+            if stack == "chrome" and template != "chrome-extension":
+                template = "chrome-extension"
+                console.print(f"[yellow]Auto-selected template '{template}' for Chrome stack[/yellow]")
+            elif stack == "python" and template == "chrome-extension":
+                template = "standard"
+                console.print(f"[yellow]Auto-selected template '{template}' for Python stack[/yellow]")
+            
+            parent_dir = Path(path)
             project_path = engine.bootstrap_project(
                 name=name,
                 template_type=template,
-                parent_path=Path(path),
+                parent_path=parent_dir,
                 force=force,
             )
             
             console.print(
                 Panel(
-                    Text.from_markup(
-                        f"✅ Project '[bold green]{name}[/bold green]' successfully initialized!\n\n"
-                        f"📍 Location: {project_path}\n"
-                        f"🧬 DNA: Validated against DLT schemas\n"
-                        f"🔥 Git: Initialized with initial commit"
-                    ),
-                    title="Project Bootstrapped",
+                    Text.from_markup(f"✅ [bold green]Project '{name}' created successfully![/bold green]"),
+                    title="Project Created",
                     border_style="green",
                 )
             )

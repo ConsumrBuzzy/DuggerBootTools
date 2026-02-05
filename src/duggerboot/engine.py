@@ -50,11 +50,12 @@ class BootEngine:
         self._create_directory_structure(project_path, template_data["structure"])
         
         # Render and create files
+        template_path = self.templates_dir / template_type
         context = {
             "project_name": name,
             "template_type": template_type,
         }
-        self._render_files(project_path, template_data["files"], context)
+        self._render_files(project_path, template_path, context)
         
         # Validate generated dugger.yaml against DLT schema
         self._validate_dna(project_path / "dugger.yaml")
@@ -133,19 +134,33 @@ class BootEngine:
         for dir_name in structure:
             (project_path / dir_name).mkdir(exist_ok=True)
     
-    def _render_files(self, project_path: Path, files: Dict[str, str], context: Dict[str, Any]) -> None:
+    def _render_files(self, project_path: Path, template_path: Path, context: Dict[str, Any]) -> None:
         """Render template files and write to project directory."""
-        env = Environment(loader=FileSystemLoader("."))
+        env = Environment(loader=FileSystemLoader(str(template_path)))
         
-        for file_path, content in files.items():
-            # Render content with Jinja2
-            template = Template(content)
-            rendered = template.render(**context)
-            
-            # Write to project directory
-            full_path = project_path / file_path
-            full_path.parent.mkdir(parents=True, exist_ok=True)
-            full_path.write_text(rendered)
+        # Walk through template directory
+        for file_path in template_path.rglob("*"):
+            if file_path.is_file() and file_path.name != "template.yaml":
+                # Get relative path from template directory
+                rel_path = file_path.relative_to(template_path)
+                
+                # Read template content
+                content = file_path.read_text()
+                
+                # Render content with Jinja2 if it's a template file
+                if file_path.suffix == ".j2":
+                    template = env.get_template(str(rel_path))
+                    rendered = template.render(**context)
+                    # Remove .j2 extension for output file
+                    output_path = project_path / str(rel_path)[:-3]
+                else:
+                    # Copy non-template files as-is
+                    rendered = content
+                    output_path = project_path / rel_path
+                
+                # Write to project directory
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                output_path.write_text(rendered)
     
     def _validate_dna(self, dugger_yaml_path: Path) -> None:
         """Validate generated dugger.yaml against DLT Project schema."""
