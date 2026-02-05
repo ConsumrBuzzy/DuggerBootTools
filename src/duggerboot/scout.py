@@ -5,6 +5,7 @@ Intelligent repository analysis for code recycling and harvestable component ide
 """
 
 import json
+import os
 import re
 from datetime import datetime
 from pathlib import Path
@@ -130,21 +131,35 @@ class ProjectScout:
         return inventory
     
     def _discover_projects(self) -> List[Path]:
-        """Discover project directories in ecosystem root.
+        """Discover project directories in ecosystem root using high-speed scan.
         
         Returns:
             List of project directory paths
         """
         project_dirs = []
         
-        for item in self.ecosystem_root.iterdir():
-            if item.is_dir() and not item.name.startswith("."):
-                # Check if it's a git repository (likely a project)
-                if (item / ".git").exists():
-                    project_dirs.append(item)
-                # Or if it has project-like files
-                elif self._has_project_indicators(item):
-                    project_dirs.append(item)
+        # High-speed scan using os.scandir() - depth limited to 1
+        try:
+            with os.scandir(self.ecosystem_root) as entries:
+                for entry in entries:
+                    if entry.is_dir() and not entry.name.startswith("."):
+                        dir_path = Path(entry.path)
+                        
+                        # Quick project detection: .git directory OR manifest.json
+                        if (dir_path / ".git").exists() or (dir_path / "manifest.json").exists():
+                            project_dirs.append(dir_path)
+                            continue
+                        
+                        # Fallback: check for project indicators (depth=1 only)
+                        if self._has_project_indicators(dir_path):
+                            project_dirs.append(dir_path)
+        except Exception as e:
+            self.logger.error(f"Failed to scan {self.ecosystem_root}: {e}")
+            # Fallback to original method
+            for item in self.ecosystem_root.iterdir():
+                if item.is_dir() and not item.name.startswith("."):
+                    if (item / ".git").exists() or self._has_project_indicators(item):
+                        project_dirs.append(item)
         
         return project_dirs
     
