@@ -43,27 +43,71 @@ def main() -> None:
     is_flag=True,
     help="Overwrite existing directory",
 )
-def init(name: str, template: str, path: str, force: bool) -> None:
-    """Initialize a new project with DLT DNA validation."""
+@click.option(
+    "--retrofit",
+    is_flag=True,
+    help="Retrofit existing directory instead of creating new project",
+)
+def init(name: str, template: str, path: str, force: bool, retrofit: bool) -> None:
+    """Initialize a new project with DLT DNA validation or retrofit existing project."""
     try:
         engine = BootEngine()
-        project_path = engine.bootstrap_project(
-            name=name,
-            template_type=template,
-            parent_path=Path(path),
-            force=force,
-        )
         
+        if retrofit:
+            # Retrofit existing project
+            project_path = Path(path) / name
+            actions_performed = engine.retrofit_project(
+                project_path=project_path,
+                project_name=name,
+                overwrite_ide=force,
+            )
+            
+            performed_count = sum(1 for performed in actions_performed.values() if performed)
+            
+            console.print(
+                Panel(
+                    Text.from_markup(
+                        f"🔧 Project '[bold green]{name}[/bold green]' retrofitted!\n\n"
+                        f"📍 Location: {project_path}\n"
+                        f"🧬 DNA: Upgraded to DLT standards\n"
+                        f"🔧 Actions: {performed_count} components injected"
+                    ),
+                    title="Project Retrofitted",
+                    border_style="green",
+                )
+            )
+        else:
+            # Create new project
+            project_path = engine.bootstrap_project(
+                name=name,
+                template_type=template,
+                parent_path=Path(path),
+                force=force,
+            )
+            
+            console.print(
+                Panel(
+                    Text.from_markup(
+                        f"✅ Project '[bold green]{name}[/bold green]' successfully initialized!\n\n"
+                        f"📍 Location: {project_path}\n"
+                        f"🧬 DNA: Validated against DLT schemas\n"
+                        f"🔥 Git: Initialized with initial commit"
+                    ),
+                    title="Project Bootstrapped",
+                    border_style="green",
+                )
+            )
+        
+        # Workflow hand-off
         console.print(
             Panel(
                 Text.from_markup(
-                    f"✅ Project '[bold green]{name}[/bold green]' successfully initialized!\n\n"
-                    f"📍 Location: {project_path}\n"
-                    f"🧬 DNA: Validated against DLT schemas\n"
-                    f"🔥 Git: Initialized with initial commit"
+                    f"🚀 [bold blue]Next Step:[/bold blue] Verify ecosystem standing\n\n"
+                    f"```bash\ncd {name}\ndgt status\n```\n\n"
+                    f"This command will verify the project's health and show available DGT operations."
                 ),
-                title="Project Bootstrapped",
-                border_style="green",
+                title="Workflow Hand-off",
+                border_style="blue",
             )
         )
         
@@ -71,7 +115,7 @@ def init(name: str, template: str, path: str, force: bool) -> None:
         console.print(
             Panel(
                 Text.from_markup(f"❌ [bold red]{e.message}[/bold red]"),
-                title="Bootstrapping Failed",
+                title="Operation Failed",
                 border_style="red",
             )
         )

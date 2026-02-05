@@ -29,6 +29,9 @@ dev = [
 [project.scripts]
 dbt = "duggerboot.cli:main"
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/duggerboot"]
+
 [tool.black]
 line-length = 88
 target-version = ['py311']

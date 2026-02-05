@@ -12,6 +12,7 @@ from jinja2 import Environment, FileSystemLoader, Template
 
 from duggerlink_tools.models import Project
 from duggerlink_tools.git import GitManager
+from duggerlink_tools.retrofit_engine import RetrofitEngine
 from .exceptions import DuggerBootError
 
 
@@ -171,7 +172,32 @@ class BootEngine:
             self.git_manager.commit(project_path, commit_message)
             
         except Exception as e:
-            raise DuggerBootError(f"Git initialization failed: {e}")
+            raise DuggerBootError(f"Git initialization failed: {e}") from e
+
+    def retrofit_project(
+        self,
+        project_path: Path,
+        project_name: str,
+        overwrite_ide: bool = False,
+    ) -> dict[str, bool]:
+        """Retrofit existing project with DLT DNA using DLT's RetrofitEngine.
+        
+        Args:
+            project_path: Path to existing project
+            project_name: Name of the project
+            overwrite_ide: Whether to overwrite existing IDE files
+            
+        Returns:
+            Dictionary of actions performed
+        """
+        try:
+            retrofit_engine = RetrofitEngine(project_path)
+            return retrofit_engine.retrofit_project(
+                project_name=project_name,
+                overwrite_ide=overwrite_ide,
+            )
+        except Exception as e:
+            raise DuggerBootError(f"Retrofit failed: {e}") from e
 
 
 # Import console for validation feedback
