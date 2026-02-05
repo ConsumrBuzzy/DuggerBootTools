@@ -209,15 +209,12 @@ def scout(path: str, suggest_recycle: bool, output_map: str) -> None:
     help="Component name (auto-generated if not provided)",
 )
 @click.option(
-    "--type",
-    help="Component type (python, chrome, shared, etc.)",
-)
-    "--description",
-    help="Component description",
-)
-@click.option(
     "--component-type",
     help="Component type (python, chrome, shared, etc.)",
+)
+@click.option(
+    "--description",
+    help="Component description",
 )
 @click.option(
     "--force",
@@ -237,7 +234,7 @@ def harvest(source_path: str, name: Optional[str], component_type: Optional[str]
         success = harvest_engine.harvest_component(
             source_path=source,
             component_name=name,
-            component_type=type or "shared",
+            component_type=component_type or "shared",
             description=description,
             force=force,
         )
