@@ -164,10 +164,33 @@ def init(name: str, template: str, stack: Optional[str], path: str, retrofit: bo
     "--output-map",
     help="Output path for ECOSYSTEM_MAP.md",
 )
-def scout(path: str, suggest_recycle: bool, output_map: str) -> None:
+@click.option(
+    "--inject-stubs",
+    is_flag=True,
+    help="Inject commit.py bridge stubs into all projects",
+)
+def scout(path: str, suggest_recycle: bool, output_map: str, inject_stubs: bool) -> None:
     """Scan ecosystem for harvestable components and retrofit candidates."""
     try:
         scout = ProjectScout(Path(path))
+        
+        if inject_stubs:
+            # Inject commit.py stubs
+            console.print("[bold blue]Injecting commit.py bridge stubs...[/bold blue]")
+            injection_results = scout.inject_commit_stubs(dry_run=False)
+            
+            successful = sum(1 for success in injection_results.values() if success)
+            total = len(injection_results)
+            
+            console.print(f"\n[bold green]Bridge Injection Complete[/bold green]")
+            console.print(f"✅ Successfully injected: {successful}/{total} projects")
+            
+            failed_projects = [name for name, success in injection_results.items() if not success]
+            if failed_projects:
+                console.print(f"⚠️  Failed projects: {', '.join(failed_projects)}")
+            
+            return
+        
         inventory = scout.scan_ecosystem(suggest_recycle=suggest_recycle)
         
         # Display summary

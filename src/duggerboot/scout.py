@@ -769,6 +769,57 @@ class ProjectScout:
         
         self.logger.info(f"Ecosystem map generated: {output_path}")
     
+    def inject_commit_stubs(self, dry_run: bool = False) -> Dict[str, bool]:
+        """Inject commit.py bridge stubs into all projects.
+        
+        Args:
+            dry_run: If True, only report what would be done without actually injecting
+            
+        Returns:
+            Dictionary mapping project names to injection success status
+        """
+        self.logger.info("Starting commit.py bridge injection")
+        
+        # Discover all project directories
+        project_dirs = self._discover_projects()
+        injection_results = {}
+        
+        # Load the commit.py template
+        template_path = Path(__file__).parent / "templates" / "commit.py.j2"
+        if not template_path.exists():
+            self.logger.error("commit.py.j2 template not found")
+            return injection_results
+        
+        commit_template = template_path.read_text(encoding="utf-8")
+        
+        for project_dir in project_dirs:
+            commit_file = project_dir / "commit.py"
+            
+            try:
+                # Check if commit.py already exists
+                if commit_file.exists():
+                    self.logger.info(f"commit.py already exists in {project_dir.name}")
+                    injection_results[project_dir.name] = False
+                    continue
+                
+                if not dry_run:
+                    # Inject the commit.py bridge
+                    commit_file.write_text(commit_template, encoding="utf-8")
+                    self.logger.info(f"Injected commit.py into {project_dir.name}")
+                else:
+                    self.logger.info(f"Would inject commit.py into {project_dir.name} (dry run)")
+                
+                injection_results[project_dir.name] = True
+                
+            except Exception as e:
+                self.logger.error(f"Failed to inject commit.py into {project_dir.name}: {e}")
+                injection_results[project_dir.name] = False
+        
+        successful = sum(1 for success in injection_results.values() if success)
+        self.logger.info(f"Bridge injection complete: {successful}/{len(project_dirs)} projects updated")
+        
+        return injection_results
+    
     def display_summary(self, inventory: EcosystemInventory) -> None:
         """Display ecosystem summary in console.
         
@@ -779,6 +830,24 @@ class ProjectScout:
         console.print(f"📊 Total Projects: {inventory.total_projects}")
         console.print(f"🔍 Top Harvest Candidates: {len(inventory.top_harvest_candidates)}")
         console.print(f"🔧 Retrofit Candidates: {len(inventory.retrofit_candidates)}")
+        
+        # Show top projects by harvest potential
+        if inventory.top_harvest_candidates:
+            console.print("\n[bold blue]Top Harvest Candidates:[/bold blue]\n")
+            
+            table = Table()
+            table.add_column("File", style="cyan")
+            table.add_column("Score", justify="right")
+            table.add_column("Tags", style="green")
+            
+            for candidate in inventory.top_harvest_candidates[:5]:
+                table.add_row(
+                    str(candidate.file_path),
+                    f"{candidate.harvest_score:.2f}",
+                    ", ".join(candidate.tags)
+                )
+            
+            console.print(table)
         
         # Show top projects by harvest potential
         if inventory.top_harvest_candidates:

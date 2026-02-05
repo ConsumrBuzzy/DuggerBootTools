@@ -64,3 +64,4 @@ files:
   src/__init__.py.j2: "Package initialization"
   tests/__init__.py.j2: "Test package initialization"
   tests/test_main.py.j2: "Basic test structure"
+  commit.py.j2: "DuggerCore Systemic Bridge for local commit access"
