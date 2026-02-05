@@ -1,0 +1,114 @@
+/**
+ * Content Script for {{ project_name }}
+ * Modern Chrome Extension with DLT DNA validation
+ */
+
+class ContentScript {
+  constructor() {
+    this.initialize();
+  }
+
+  initialize() {
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.setup());
+    } else {
+      this.setup();
+    }
+  }
+
+  setup() {
+    console.log('{{ project_name }} content script loaded');
+    this.setupEventListeners();
+    this.checkExtensionStatus();
+  }
+
+  setupEventListeners() {
+    // Example: Listen for specific DOM events
+    document.addEventListener('click', (event) => {
+      this.handleClick(event);
+    });
+
+    // Listen for messages from popup/background
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      this.handleMessage(message, sender, sendResponse);
+      return true;
+    });
+  }
+
+  handleClick(event) {
+    // Example: Handle specific click events
+    const target = event.target;
+    
+    // Add your custom logic here
+    if (target.matches('.your-custom-selector')) {
+      event.preventDefault();
+      this.handleCustomAction(target);
+    }
+  }
+
+  handleCustomAction(element) {
+    // Example: Send data to background script
+    chrome.runtime.sendMessage({
+      action: 'customAction',
+      data: {
+        element: element.tagName,
+        text: element.textContent,
+        url: window.location.href
+      }
+    });
+  }
+
+  async handleMessage(message, sender, sendResponse) {
+    try {
+      switch (message.action) {
+        case 'getPageInfo':
+          const pageInfo = this.getPageInfo();
+          sendResponse({ success: true, data: pageInfo });
+          break;
+        
+        case 'highlightElements':
+          this.highlightElements(message.selectors);
+          sendResponse({ success: true });
+          break;
+        
+        default:
+          sendResponse({ error: 'Unknown action' });
+      }
+    } catch (error) {
+      console.error('Content script message error:', error);
+      sendResponse({ error: error.message });
+    }
+  }
+
+  getPageInfo() {
+    return {
+      title: document.title,
+      url: window.location.href,
+      domain: window.location.hostname,
+      timestamp: Date.now()
+    };
+  }
+
+  highlightElements(selectors) {
+    selectors.forEach(selector => {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(element => {
+        element.style.border = '2px solid red';
+        element.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+      });
+    });
+  }
+
+  async checkExtensionStatus() {
+    try {
+      const response = await chrome.runtime.sendMessage({ action: 'getStatus' });
+      console.log('Extension status:', response);
+    } catch (error) {
+      console.error('Failed to check extension status:', error);
+    }
+  }
+}
+
+// Initialize the content script
+new ContentScript();
