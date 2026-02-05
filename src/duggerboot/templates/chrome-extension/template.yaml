@@ -1,0 +1,35 @@
+name: chrome-extension
+description: Modern Chrome Extension with Manifest V3 and clean architecture
+version: 1.0.0
+stack: chrome
+language: javascript
+
+structure:
+  - src
+  - tests
+  - docs
+
+files:
+  manifest.json.j2: "Chrome Extension Manifest V3"
+  src/background.js.j2: "Background service worker"
+  src/content.js.j2: "Content script"
+  src/popup.html.j2: "Extension popup UI"
+  src/popup.js.j2: "Popup logic"
+  package.json.j2: "Node.js dependencies"
+  README.md.j2: "Extension documentation"
+
+dependencies:
+  core: []
+  dev:
+    - "webpack"
+    - "webpack-cli"
+    - "copy-webpack-plugin"
+
+permissions:
+  minimal: ["storage", "activeTab"]
+  optional: ["scripting", "tabs"]
+
+quality:
+  linter: "eslint"
+  formatter: "prettier"
+  test_runner: "jest"
