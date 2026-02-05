@@ -7,12 +7,15 @@ Provides dbt-init command for bootstrapping projects with DLT DNA validation.
 
 import click
 from pathlib import Path
+from typing import Optional
 from rich.console import Console
 from rich.panel import Panel
+from rich.table import Table
 from rich.text import Text
 
 from .engine import BootEngine
 from .scout import ProjectScout
+from .harvest import HarvestEngine
 from .exceptions import DuggerBootError
 
 console = Console()
@@ -188,6 +191,133 @@ def scout(path: str, suggest_recycle: bool, output_map: str) -> None:
             )
         )
         raise click.ClickException(str(e))
+    except Exception as e:
+        console.print(
+            Panel(
+                Text.from_markup(f"💥 Unexpected error: {e}"),
+                title="System Error",
+                border_style="red",
+            )
+        )
+        raise click.ClickException(str(e))
+
+
+@main.command()
+@click.argument("source_path", type=click.Path(exists=True))
+@click.option(
+    "--name",
+    help="Component name (auto-generated if not provided)",
+)
+@click.option(
+    "--type",
+    help="Component type (python, chrome, shared, etc.)",
+)
+    "--description",
+    help="Component description",
+)
+@click.option(
+    "--component-type",
+    help="Component type (python, chrome, shared, etc.)",
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Overwrite existing component",
+)
+def harvest(source_path: str, name: Optional[str], component_type: Optional[str], description: Optional[str], force: bool) -> None:
+    """Harvest a component from an existing project."""
+    try:
+        harvest_engine = HarvestEngine()
+        source = Path(source_path)
+        
+        # Auto-generate name if not provided
+        if name is None:
+            name = source.stem if source.is_file() else source.name
+        
+        success = harvest_engine.harvest_component(
+            source_path=source,
+            component_name=name,
+            component_type=type or "shared",
+            description=description,
+            force=force,
+        )
+        
+        if success:
+            console.print(
+                Panel(
+                    Text.from_markup(f"✅ [bold green]Component '{name}' harvested successfully[/bold green]"),
+                    title="Harvest Complete",
+                    border_style="green",
+                )
+            )
+        else:
+            console.print(
+                Panel(
+                    Text.from_markup(f"❌ [bold red]Failed to harvest component '{name}'[/bold red]"),
+                    title="Harvest Failed",
+                    border_style="red",
+                )
+            )
+            
+    except DuggerBootError as e:
+        console.print(
+            Panel(
+                Text.from_markup(f"❌ [bold red]{e.message}[/bold red]"),
+                title="Harvest Failed",
+                border_style="red",
+            )
+        )
+        raise click.ClickException(str(e))
+    except Exception as e:
+        console.print(
+            Panel(
+                Text.from_markup(f"💥 Unexpected error: {e}"),
+                title="System Error",
+                border_style="red",
+            )
+        )
+        raise click.ClickException(str(e))
+
+
+@main.command()
+@click.option(
+    "--query",
+    help="Search components by name, description, or tags",
+)
+def list_components(query: Optional[str]) -> None:
+    """List all harvested components."""
+    try:
+        harvest_engine = HarvestEngine()
+        
+        if query:
+            components = harvest_engine.search_components(query)
+            console.print(f"\n[bold blue]Components matching '{query}':[/bold blue]\n")
+        else:
+            harvest_engine.display_components()
+            return
+        
+        if not components:
+            console.print("No matching components found.")
+            return
+        
+        table = Table()
+        table.add_column("Name", style="cyan")
+        table.add_column("Category", style="magenta")
+        table.add_column("Quality", justify="right")
+        table.add_column("Files", justify="right")
+        table.add_column("Tags", style="green")
+        
+        for component in components:
+            table.add_row(
+                component["name"],
+                component["category"],
+                f"{component['quality_score']:.2f}",
+                str(len(component["files"])),
+                ", ".join(component["tags"][:3])
+            )
+        
+        console.print(table)
+        
     except Exception as e:
         console.print(
             Panel(
