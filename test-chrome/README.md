@@ -1,0 +1,137 @@
+# test-chrome
+
+test-chrome - Chrome Extension with DLT DNA validation
+
+## Overview
+
+This Chrome Extension was bootstrapped using DuggerBootTools with modern Manifest V3 compliance and clean architecture principles.
+
+## Extension Permissions
+
+This extension requests the following permissions:
+
+### Minimal Permissions
+- `storage` - For extension data persistence
+- `activeTab` - For interacting with the current active tab
+
+### Optional Permissions
+- `scripting` - For advanced script injection (if needed)
+- `tabs` - For tab management operations (if needed)
+
+## Development Setup
+
+### Prerequisites
+- Node.js 16+
+- Chrome/Edge browser with developer mode enabled
+
+### Installation
+
+1. Clone the extension directory
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Build for development:
+   ```bash
+   npm run dev
+   ```
+
+4. Load extension in Chrome:
+   - Open `chrome://extensions/`
+   - Enable "Developer mode"
+   - Click "Load unpacked"
+   - Select the extension directory
+
+### Available Scripts
+
+- `npm run build` - Production build
+- `npm run dev` - Development build with watch mode
+- `npm run lint` - ESLint code checking
+- `npm run format` - Prettier code formatting
+- `npm run test` - Jest test runner
+
+## Architecture
+
+### File Structure
+```
+src/
+├── background.js     # Service worker (background script)
+├── content.js        # Content script for page interaction
+├── popup.html        # Extension popup UI
+└── popup.js          # Popup logic and event handling
+```
+
+### Key Components
+
+#### Background Service (`background.js`)
+- Handles extension lifecycle events
+- Manages message passing between components
+- Provides core extension functionality
+
+#### Content Script (`content.js`)
+- Injected into web pages
+- Interacts with DOM elements
+- Communicates with background script
+
+#### Popup Interface (`popup.html` + `popup.js`)
+- User interface for extension controls
+- Settings and configuration options
+- Status display and feedback
+
+## Message Passing
+
+The extension uses Chrome's message passing API for communication:
+
+```javascript
+// From content script to background
+chrome.runtime.sendMessage({
+  action: 'customAction',
+  data: { /* your data */ }
+});
+
+// From popup to content script
+chrome.tabs.sendMessage(tabId, {
+  action: 'getPageInfo'
+});
+```
+
+## DLT Integration
+
+This extension includes DuggerLinkTools DNA validation:
+
+- **IDE Sync**: Automatic configuration for Cursor, Windsurf, and other AI IDEs
+- **Task Extraction**: TODO/FIXME tracking and reporting
+- **Quality Standards**: ESLint + Prettier configuration
+- **Documentation**: Auto-generated README and structure
+
+## Security Considerations
+
+- Content Security Policy (CSP) configured for security
+- Minimal permissions requested
+- Secure message passing practices
+- No eval() or dynamic code execution
+
+## Browser Compatibility
+
+- Chrome 88+ (Manifest V3 support)
+- Edge 88+ (Chromium-based)
+- Firefox 109+ (Limited Manifest V3 support)
+
+## Contributing
+
+1. Follow the existing code style
+2. Run linting and tests before submitting
+3. Update documentation for new features
+4. Test across different browsers
+
+## License
+
+MIT License - see LICENSE file for details
+
+## Support
+
+For issues and questions:
+- Check the DuggerLinkTools documentation
+- Review Chrome Extension developer guides
+- Use browser developer tools for debugging

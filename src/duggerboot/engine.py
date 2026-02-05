@@ -160,7 +160,7 @@ class BootEngine:
                 
                 # Write to project directory
                 output_path.parent.mkdir(parents=True, exist_ok=True)
-                output_path.write_text(rendered)
+                output_path.write_text(rendered, encoding='utf-8')
     
     def _validate_dna(self, dugger_yaml_path: Path) -> None:
         """Validate generated dugger.yaml against DLT Project schema."""
