@@ -11,8 +11,8 @@ import subprocess
 from jinja2 import Environment, FileSystemLoader, Template
 
 from duggerlink.models.project import DuggerProject as Project
-from duggerlink.git.operations import GitOperations as GitManager
 from duggerlink.retrofit_engine import RetrofitEngine
+from duggerlink.utils.io import safe_write
 from .exceptions import DuggerBootError
 
 
@@ -160,7 +160,7 @@ class BootEngine:
                 
                 # Write to project directory
                 output_path.parent.mkdir(parents=True, exist_ok=True)
-                output_path.write_text(rendered, encoding='utf-8')
+                safe_write(output_path, rendered)
     
     def _validate_dna(self, dugger_yaml_path: Path) -> None:
         """Validate generated dugger.yaml against DLT Project schema."""
