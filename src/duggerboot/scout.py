@@ -9,7 +9,7 @@ import os
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Set
 
 from loguru import logger
 from rich.console import Console
